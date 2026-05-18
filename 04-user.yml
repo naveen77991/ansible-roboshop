@@ -1,0 +1,76 @@
+---
+- name: Install and Configure User Service
+  hosts: user
+  become: yes
+
+  tasks:
+    - name: Disable Default NodeJS
+      command: dnf module disable nodejs -y
+
+    - name: Enable NodeJS 20
+      command: dnf module enable nodejs:20 -y
+
+    - name: Install NodeJS
+      dnf:
+        name: nodejs
+        state: present
+
+    - name: Create Roboshop User
+      user:
+        name: roboshop
+        system: yes
+        home: /app
+        shell: /sbin/nologin
+        comment: "roboshop system user"
+        create_home: yes
+      ignore_errors: yes
+
+    - name: Create App Directory
+      file:
+        path: /app
+        state: directory
+
+    - name: Download User Code
+      get_url:
+        url: https://roboshop-artifacts.s3.amazonaws.com/user-v3.zip
+        dest: /tmp/user.zip
+
+    - name: Remove Old Code
+      file:
+        path: /app
+        state: absent
+
+    - name: Recreate App Directory
+      file:
+        path: /app
+        state: directory
+
+    - name: Unzip User Code
+      unarchive:
+        src: /tmp/user.zip
+        dest: /app
+        remote_src: yes
+
+    - name: Install Dependencies
+      npm:
+        path: /app
+
+    - name: Copy User Service
+      template:
+        src: user.service.j2
+        dest: /etc/systemd/system/user.service
+
+    - name: Reload Daemon
+      systemd:
+        daemon_reload: yes
+
+    - name: Start and Enable User Service
+      service:
+        name: user
+        state: started
+        enabled: yes
+
+    - name: Restart User Service
+      service:
+        name: user
+        state: restarted

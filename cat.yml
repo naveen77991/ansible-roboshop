@@ -5,12 +5,10 @@
 
   tasks:
     - name: Disable Default NodeJS
-      dnf:
-        name: '@nodejs'
-        state: absent
+      shell: dnf module disable nodejs -y
 
     - name: Enable NodeJS 20
-      command: dnf module enable nodejs:20 -y
+      shell: dnf module enable nodejs:20 -y
 
     - name: Install NodeJS
       dnf:
