@@ -13,9 +13,19 @@
         state: started
         enabled: yes
 
+    - name: Remove default nginx content
+      ansible.builtin.file:
+        path: /usr/share/nginx/html
+        state: absent
+
+    - name: Recreate html directory
+      ansible.builtin.file:
+        path: /usr/share/nginx/html
+        state: directory
+
     - name: Download frontend app
       ansible.builtin.get_url:
-        url: https://github.com/naveen77991/ansible-roboshop/releases/latest/download/frontend.zip
+        url: https://roboshop-artifacts.s3.amazonaws.com/frontend-v3.zip
         dest: /tmp/frontend.zip
 
     - name: Extract frontend
@@ -24,7 +34,7 @@
         dest: /usr/share/nginx/html/
         remote_src: yes
 
-    - name: Update backend endpoints in config
+    - name: Update nginx config
       ansible.builtin.copy:
         src: nginx.conf
         dest: /etc/nginx/nginx.conf
